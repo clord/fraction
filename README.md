@@ -1,12 +1,12 @@
-For a [cooking website](http://freshslowcooking.com) I recently worked on, 
+For a [cooking website][3] I recently worked on, 
 I needed to display decimal floating point numbers as fractions. I needed to 
 come up with the fraction closest to what the user typed. For example, 0.33 
 should resolve to ⅓. When I googled for a solution, most of the code I found 
 was slow, buggy, and worst of all, too precise (returning 33/100 for the above example.)
 
-I decided to widen my search to C, and found a piece of code on Stack Overflow 
+I decided to widen my search to C, and [found][1] a piece of code on Stack Overflow 
 written by David Eppstein in 1993. 
-It uses the [theory of continued fractions][1] to approach the correct value, 
+It uses the [theory of continued fractions][2] to approach the correct value, 
 but stops when the denominator reaches some value. The limitation of such an 
 algorithm is that we can't choose to leave out unnatural denominators 
 
@@ -40,4 +40,6 @@ subtracting the time required for an empty ruby loop, we can conclude the
 algorithm itself requires only ½ of a second for 1,000,000 iterations on my Mac Pro.
 
 
-[1]: http://www.maths.surrey.ac.uk/hosted-sites/R.Knott/Fibonacci/cfINTRO.html#termdecs
+[1]: http://stackoverflow.com/questions/95727/how-to-convert-floats-to-human-readable-fractions
+[2]: http://www.maths.surrey.ac.uk/hosted-sites/R.Knott/Fibonacci/cfINTRO.html#termdecs
+[3]: http://freshslowcooking.com
