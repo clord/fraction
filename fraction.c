@@ -6,7 +6,7 @@
 **
 ** Made into a ruby module by Christopher Lord, Nov 2009
 **
-** usage: require 'findfract'
+** usage: require 'fraction'
 **
 **        n,d,err = 0.33.fraction
 **
@@ -24,6 +24,8 @@
 
 #include "ruby.h"
 #include <stdio.h>
+
+
 VALUE method_html_form_for(VALUE self)
 {
    VALUE res = rb_str_new2("<span class='fraction'><span class='above'>");
@@ -41,6 +43,8 @@ VALUE method_html_form_for(VALUE self)
    // .below { vertical-align: -0.3ex; }
    return res;   
 }
+
+
 VALUE method_string_form_for(VALUE self)
 {
    VALUE res = rb_str_new2("");
@@ -52,6 +56,8 @@ VALUE method_string_form_for(VALUE self)
    rb_str_concat(res, rb_obj_as_string(den));
    return res;   
 }
+
+
 VALUE method_fraction_for(int argc, VALUE * argv, VALUE self)
 {
    long m11, m12,
@@ -90,7 +96,6 @@ VALUE method_fraction_for(int argc, VALUE * argv, VALUE self)
   // rb_define_singleton_method(res, "to_s", method_string_form_for, 0);
   // rb_define_singleton_method(res, "to_html", method_html_form_for, 0);
 
-
    /* We can go one more step to find another candidate:
       m11 = m11 * ai + m12;
       m21 = m21 * ai + m22;
@@ -98,6 +103,7 @@ VALUE method_fraction_for(int argc, VALUE * argv, VALUE self)
    */
    return res;
 }
+
 
 void Init_fraction() {
    rb_define_method(rb_cNumeric, "fraction", method_fraction_for, -1);
