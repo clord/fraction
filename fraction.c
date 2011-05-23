@@ -29,7 +29,7 @@
 VALUE method_html_form_for(VALUE self)
 {
    VALUE res = rb_str_new2("<span class='fraction'><span class='above'>");
-   // This is an array. to make a string form, we want to 
+   // This is an array. to make a string form, we want to
    VALUE num = rb_obj_as_string(rb_ary_entry(self, 0));
    VALUE den = rb_obj_as_string(rb_ary_entry(self, 1));
    rb_str_concat(res, rb_obj_as_string(num));
@@ -41,20 +41,20 @@ VALUE method_html_form_for(VALUE self)
    //                  font-family: Verdana, Arial, sans-serif; }
    // .above { vertical-align: 0.7ex; }
    // .below { vertical-align: -0.3ex; }
-   return res;   
+   return res;
 }
 
 
 VALUE method_string_form_for(VALUE self)
 {
    VALUE res = rb_str_new2("");
-   // This is an array. to make a string form, we want to 
+   // This is an array. to make a string form, we want to
    VALUE num = rb_obj_as_string(rb_ary_entry(self, 0));
    VALUE den = rb_obj_as_string(rb_ary_entry(self, 1));
    rb_str_concat(res, rb_obj_as_string(num));
    rb_str_cat2(res, "/");
    rb_str_concat(res, rb_obj_as_string(den));
-   return res;   
+   return res;
 }
 
 
@@ -92,7 +92,7 @@ VALUE method_fraction_for(int argc, VALUE * argv, VALUE self)
    rb_ary_store(res, 0, numer1);
    rb_ary_store(res, 1, denom1);
    rb_ary_store(res, 2, err1);
-// Although the below is very cool, it's also quite slow to execute. 
+// Although the below is very cool, it's also quite slow to execute.
   // rb_define_singleton_method(res, "to_s", method_string_form_for, 0);
   // rb_define_singleton_method(res, "to_html", method_html_form_for, 0);
 
@@ -105,8 +105,63 @@ VALUE method_fraction_for(int argc, VALUE * argv, VALUE self)
 }
 
 
+/// Same as above, but implements whole fraction simplification.
+/// the return value is: h, n, d, e = 3.5.whole_fraction
+VALUE method_whole_fraction_for(int argc, VALUE * argv, VALUE self)
+{
+   long m11, m12,
+        m21, m22;
+   VALUE res = rb_ary_new2(4);
+   VALUE maxdenr;
+   int maxden = 10; // the default
+   rb_scan_args(argc, argv, "01", &maxdenr);
+   if (!NIL_P(maxdenr))
+     maxden = NUM2INT(maxdenr);
+   int ai;
+   double x = NUM2DBL(self);
+   double startx = x;
+   m11 = m22 = 1;
+   m12 = m21 = 0;
+
+   // loop finding terms until denom gets too big
+   while (m21 *  ( ai = (long)x ) + m22 <= maxden) {
+      long t = m11 * ai + m12;
+      m12 = m11;
+      m11 = t;
+      t = m21 * ai + m22;
+      m22 = m21;
+      m21 = t;
+      if(x==(double)ai) break;
+      x = 1/(x - (double) ai);
+      if(x>(double)0x7FFFFFFF) break;
+   }
+   VALUE wholen = INT2NUM(m11 / m21);
+   VALUE numer1 = INT2NUM(m11 % m21);
+   VALUE denom1 = INT2NUM(m21);
+   VALUE err1 = rb_float_new(startx - ((double) m11 / (double) m21));
+
+   rb_ary_store(res, 0, wholen);
+   rb_ary_store(res, 1, numer1);
+   rb_ary_store(res, 2, denom1);
+   rb_ary_store(res, 3, err1);
+   return res;
+}
+
+
 void Init_fraction() {
+
+   rb_define_method(rb_cNumeric, "to_whole_fraction", method_whole_fraction_for, -1);
+   rb_define_method(rb_cFloat,   "to_whole_fraction", method_whole_fraction_for, -1);
+
+   rb_define_method(rb_cNumeric, "to_fraction", method_fraction_for, -1);
+   rb_define_method(rb_cFloat,   "to_fraction", method_fraction_for, -1);
+
+   // The following are legacy support methods. they are named a bit badly
    rb_define_method(rb_cNumeric, "fraction", method_fraction_for, -1);
    rb_define_method(rb_cFloat,   "fraction", method_fraction_for, -1);
+
+   rb_define_method(rb_cNumeric, "whole_fraction", method_whole_fraction_for, -1);
+   rb_define_method(rb_cFloat,   "whole_fraction", method_whole_fraction_for, -1);
+
 }
 
