@@ -57,25 +57,35 @@ VALUE method_string_form_for(VALUE self)
    return res;
 }
 
-
-VALUE method_fraction_for(int argc, VALUE * argv, VALUE self)
+void core_fraction(double val, long maxden, long * n, long * d, double * e)
 {
-   long m11, m12,
-        m21, m22;
-   VALUE res = rb_ary_new2(3);
-   VALUE maxdenr;
-   int maxden = 10; // the default
-   rb_scan_args(argc, argv, "01", &maxdenr);
-   if (!NIL_P(maxdenr))
-     maxden = NUM2INT(maxdenr);
    int ai;
-   double x = NUM2DBL(self);
-   double startx = x;
-   m11 = m22 = 1;
-   m12 = m21 = 0;
+   long sign = 1;
+   long m11 = 1, m22 = 1;
+   long m12 = 0, m21 = 0;
+   if (val == NAN) {
+      *n = NAN;
+      *d = NAN;
+      *e = NAN;
+      return;
+   }
+   if (val == INFINITY) {
+      *n = INFINITY;
+      *d = 1.0;
+      *e = 0.0;
+      return;
+   }
+   if (val < 0.0) {
+      // work in positive space, it seems we can get confused by negatives
+      sign = -1;
+      val *= -1.0;
+   }
+   double x = val;
+   long count = 0;
 
    // loop finding terms until denom gets too big
    while (m21 *  ( ai = (long)x ) + m22 <= maxden) {
+      if (++count > 50000000) break; // break after 'too many' iterations
       long t = m11 * ai + m12;
       m12 = m11;
       m11 = t;
@@ -86,15 +96,34 @@ VALUE method_fraction_for(int argc, VALUE * argv, VALUE self)
       x = 1/(x - (double) ai);
       if(x>(double)0x7FFFFFFF) break;
    }
-   VALUE numer1 = INT2NUM(m11);
-   VALUE denom1 = INT2NUM(m21);
-   VALUE err1 = rb_float_new(startx - ((double) m11 / (double) m21));
+   *n = m11 * sign;
+   *d = m21;
+   *e = val - ((double)m11 / (double)m21);
+}
+
+
+VALUE method_fraction_for(int argc, VALUE * argv, VALUE self)
+{
+   VALUE res = rb_ary_new2(3);
+   VALUE maxdenr;
+   long maxden = 10; // the default
+   rb_scan_args(argc, argv, "01", &maxdenr);
+   if (!NIL_P(maxdenr))
+     maxden = NUM2INT(maxdenr);
+   double x = NUM2DBL(self);
+   long n, d;
+   double e;
+   core_fraction(x, maxden, &n, &d, &e);
+
+   VALUE numer1 = INT2NUM(n);
+   VALUE denom1 = INT2NUM(d);
+   VALUE err1 = rb_float_new(e);
    rb_ary_store(res, 0, numer1);
    rb_ary_store(res, 1, denom1);
    rb_ary_store(res, 2, err1);
-// Although the below is very cool, it's also quite slow to execute.
-  // rb_define_singleton_method(res, "to_s", method_string_form_for, 0);
-  // rb_define_singleton_method(res, "to_html", method_html_form_for, 0);
+   // Although the below is very cool, it's also quite slow to execute.
+   //rb_define_singleton_method(res, "to_s", method_string_form_for, 0);
+   //rb_define_singleton_method(res, "to_html", method_html_form_for, 0);
 
    /* We can go one more step to find another candidate:
       m11 = m11 * ai + m12;
@@ -113,32 +142,18 @@ VALUE method_whole_fraction_for(int argc, VALUE * argv, VALUE self)
         m21, m22;
    VALUE res = rb_ary_new2(4);
    VALUE maxdenr;
-   int maxden = 10; // the default
+   long maxden = 10; // the default
    rb_scan_args(argc, argv, "01", &maxdenr);
    if (!NIL_P(maxdenr))
      maxden = NUM2INT(maxdenr);
-   int ai;
    double x = NUM2DBL(self);
-   double startx = x;
-   m11 = m22 = 1;
-   m12 = m21 = 0;
-
-   // loop finding terms until denom gets too big
-   while (m21 *  ( ai = (long)x ) + m22 <= maxden) {
-      long t = m11 * ai + m12;
-      m12 = m11;
-      m11 = t;
-      t = m21 * ai + m22;
-      m22 = m21;
-      m21 = t;
-      if(x==(double)ai) break;
-      x = 1/(x - (double) ai);
-      if(x>(double)0x7FFFFFFF) break;
-   }
-   VALUE wholen = INT2NUM(m11 / m21);
-   VALUE numer1 = INT2NUM(m11 % m21);
-   VALUE denom1 = INT2NUM(m21);
-   VALUE err1 = rb_float_new(startx - ((double) m11 / (double) m21));
+   long n, d;
+   double e;
+   core_fraction(x, maxden, &n, &d, &e);
+   VALUE wholen = INT2NUM(n / d);
+   VALUE numer1 = INT2NUM(n % d);
+   VALUE denom1 = INT2NUM(d);
+   VALUE err1 = rb_float_new(e);
 
    rb_ary_store(res, 0, wholen);
    rb_ary_store(res, 1, numer1);
