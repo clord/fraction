@@ -63,18 +63,6 @@ void core_fraction(double val, long maxden, long * n, long * d, double * e)
    long sign = 1;
    long m11 = 1, m22 = 1;
    long m12 = 0, m21 = 0;
-   if (val == NAN) {
-      *n = NAN;
-      *d = NAN;
-      *e = NAN;
-      return;
-   }
-   if (val == INFINITY) {
-      *n = INFINITY;
-      *d = 1.0;
-      *e = 0.0;
-      return;
-   }
    if (val < 0.0) {
       // work in positive space, it seems we can get confused by negatives
       sign = -1;
