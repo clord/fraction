@@ -134,12 +134,23 @@ VALUE method_whole_fraction_for(int argc, VALUE * argv, VALUE self)
    rb_scan_args(argc, argv, "01", &maxdenr);
    if (!NIL_P(maxdenr))
      maxden = NUM2INT(maxdenr);
-   double x = NUM2DBL(self);
+
+   if (rb_equal(INT2FIX(0), self)){
+      rb_ary_store(res, 0, INT2FIX(0));
+      rb_ary_store(res, 1, INT2FIX(0));
+      rb_ary_store(res, 2, INT2FIX(1));
+      rb_ary_store(res, 3, INT2FIX(0));
+      return res;
+   }
+
+   VALUE wholen = rb_funcall(self, rb_intern("truncate"), 0);
+   VALUE subval = rb_funcall(rb_funcall(self, rb_intern("-"), 1, wholen), rb_intern("abs"), 0);
+
+   double x = NUM2DBL(subval);
    long n, d;
    double e;
    core_fraction(x, maxden, &n, &d, &e);
-   VALUE wholen = INT2NUM(n / d);
-   VALUE numer1 = INT2NUM(n % d);
+   VALUE numer1 = INT2NUM(n);
    VALUE denom1 = INT2NUM(d);
    VALUE err1 = rb_float_new(e);
 
