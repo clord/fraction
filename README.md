@@ -4,6 +4,8 @@ come up with the fraction closest to what the user typed. For example, 0.33
 should resolve to ⅓. When I googled for a solution, most of the code I found
 was slow, buggy, and worst of all, too precise (returning 33/100 for the above example.)
 
+<a class="bmc-button" target="_blank" href="https://www.buymeacoffee.com/clord"><img src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg" alt="Buy me a coffee"><span style="margin-left:15px;font-size:19px !important;">Buy me a coffee</span></a>
+
 I decided to widen my search to C, and [found][1] a piece of code on Stack Overflow
 written by David Eppstein in 1993.
 It uses the [theory of continued fractions][2] to approach the correct value,
